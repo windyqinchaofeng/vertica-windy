@@ -65,3 +65,9 @@ FROM   (SELECT ps.anchor_table_schema,
                            LIMIT  1) / (SELECT SUM(used_bytes)
                                         FROM   V_MONITOR.projection_storage) AS ratio) la
 ORDER  BY pj.used_compressed_gb DESC;
+
+--备份权限
+--backup grants
+ select 'grant '|| privileges_description || ' on '|| object_name || ' to '|| grantee||';' 
+ from grants where grantor<>grantee 
+ order by object_name;

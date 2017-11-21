@@ -68,6 +68,14 @@ ORDER  BY pj.used_compressed_gb DESC;
 
 --备份权限
 --backup grants
- select 'grant '|| privileges_description || ' on '|| object_name || ' to '|| grantee||';' 
- from grants where grantor<>grantee 
- order by object_name;
+select 'GRANT '|| privileges_description 
+     ||case 
+           when object_type = 'ROLE' then ' ON ' || object_name || ' to '|| grantee||';' 
+           when object_type = 'SCHEMA' then ' ON SCHEMA ' || object_name || ' to '|| grantee||';' 
+           when object_type = 'RESOURCEPOOL' then ' ON RESOURCE POOL ' || object_name || ' to '|| grantee||';' 
+           when object_type = 'TABLE' then ' ON TABLE ' ||object_schema||'.'|| object_name || ' to '|| grantee||';' 
+       end
+ from grants 
+where grantor<>grantee 
+  and object_type != 'PROCEDURE' 
+order by object_type,object_name;

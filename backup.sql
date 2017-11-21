@@ -67,14 +67,21 @@ FROM   (SELECT ps.anchor_table_schema,
 ORDER  BY pj.used_compressed_gb DESC;
 
 --备份权限
---backup grants
-select 'GRANT '|| privileges_description 
+-- EXCEPT User Defined Extension/Storage Location/Procedure/Library/Authentication
+select 'GRANT '
+     || replace(privileges_description ,'*','')
      ||case 
-           when object_type = 'ROLE' then ' ON ' || object_name || ' to '|| grantee||';' 
-           when object_type = 'SCHEMA' then ' ON SCHEMA ' || object_name || ' to '|| grantee||';' 
-           when object_type = 'RESOURCEPOOL' then ' ON RESOURCE POOL ' || object_name || ' to '|| grantee||';' 
-           when object_type = 'TABLE' then ' ON TABLE ' ||object_schema||'.'|| object_name || ' to '|| grantee||';' 
+           when object_type = 'DATABASE' then ' ON DATABASE '
+		   when object_type = 'ROLE' then ' ON '
+           when object_type = 'SCHEMA' then ' ON SCHEMA '
+           when object_type = 'RESOURCEPOOL' then ' ON RESOURCE POOL '
+           when object_type = 'TABLE' then ' ON TABLE '
+		   when object_type = 'SEQUENCE' then ' ON SEQUENCE '
+		   when object_type = 'VIEW' then ' '
        end
+     || case when object_schema is not null then object_schema||'.'||object_name else object_name end
+	 || ' to '|| grantee
+	 || case when instr(privileges_description ,'*')>=1 then ' WITH GRANT OPTION;' else ';' end
  from grants 
 where grantor<>grantee 
   and object_type != 'PROCEDURE' 
